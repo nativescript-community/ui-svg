@@ -142,7 +142,7 @@ module.exports = {
         'no-irregular-whitespace': 'off',
         'no-multiple-empty-lines': 'off',
         'no-new-wrappers': 'error',
-        'no-redeclare': 'error',
+        'no-redeclare': ['error', { builtinGlobals: false }],
         'no-regex-spaces': 'error',
         'no-return-await': 'error',
         'no-shadow': [
