@@ -1,4 +1,4 @@
-# NativeScript Label widget
+# NativeScript SVG widget
 
 [![npm downloads](https://img.shields.io/npm/dm/@nativescript-community/ui-svg.svg)](https://www.npmjs.com/package/@nativescript-community/ui-svg)
 [![npm downloads](https://img.shields.io/npm/dt/@nativescript-community/ui-svg.svg)](https://www.npmjs.com/package/@nativescript-community/ui-svg)

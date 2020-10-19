@@ -1,1 +1,2 @@
 pod 'SVGgh'
+# pod 'SVGKit', '~> 3.0.0-beta3'

@@ -3,7 +3,21 @@ import { File, ImageAsset, Utils, knownFolders, path } from '@nativescript/core'
 import { RESOURCE_PREFIX, isFileOrResourcePath } from '@nativescript/core/utils/utils';
 import { SVG as SVGBase, SVGView as SVGViewBase, srcProperty, stretchProperty } from './index.common';
 export { CanvasSVG } from './index.common';
-
+// function getUIImageScaleType(scaleType: string) {
+//     switch (scaleType) {
+//         case 'aspectFill':
+//             return UIViewContentMode.ScaleAspectFill;
+//         case 'aspectFit':
+//             return UIViewContentMode.ScaleAspectFit;
+//         case 'fill':
+//             return UIViewContentMode.ScaleToFill;
+//         case 'none':
+//             return UIViewContentMode.TopLeft;
+//         default:
+//             break;
+//     }
+//     return null;
+// }
 function getRenderer(src: string | ImageAsset | File) {
     let imagePath: string;
     if (src instanceof File) {
@@ -28,6 +42,31 @@ function getRenderer(src: string | ImageAsset | File) {
     }
     return SVGRenderer.alloc().initWithString(imagePath);
 }
+// function getSVGKImage(src: string | ImageAsset | File) {
+//     let imagePath: string;
+//     if (src instanceof File) {
+//         return SVGKImage.alloc().initWithData(NSData.alloc().initWithContentsOfFile(src.path));
+//     } else if (src instanceof ImageAsset) {
+//         imagePath = src.ios;
+//     } else {
+//         imagePath = src;
+//     }
+//     if (isFileOrResourcePath(imagePath)) {
+//         if (imagePath.indexOf(RESOURCE_PREFIX) === 0) {
+//             const resName = imagePath.substr(RESOURCE_PREFIX.length);
+//             return SVGKImage.imageNamed(resName);
+//         } else if (imagePath.indexOf('~/') === 0) {
+//             const strPath = path.join(knownFolders.currentApp().path, imagePath.replace('~/', ''));
+//             return SVGKImage.imageWithContentsOfFile(strPath);
+//         } else if (imagePath.indexOf('/') === 0) {
+//             return SVGKImage.imageWithContentsOfFile(imagePath);
+
+//             // return com.caverock.androidsvg.SVG.getFromInputStream(stream);
+//         }
+//     }
+
+//     return SVGKImage.imageWithSource(SVGKSourceString.sourceFromContentsOfString(imagePath));
+// }
 declare module '@nativescript-community/ui-canvas' {
     interface Canvas {
         ctx: any; // CGContextRef
@@ -35,16 +74,17 @@ declare module '@nativescript-community/ui-canvas' {
 }
 export class SVG extends SVGBase {
     _renderer: SVGRenderer;
+    // _svgkimage: SVGKImage;
     _src: string | File | ImageAsset;
-    // private renderOptions = new com.caverock.androidsvg.RenderOptions();
 
     makeScales(availableWidth, availableHeight) {
         const width = this.getWidth(availableWidth, availableHeight);
         const height = this.getHeight(availableWidth, availableHeight);
-        const preferredRect = this._renderer.viewRect;
+        // const svgSize = this._svgkimage.size;
+        const svgSize = this._renderer.viewRect && this._renderer.viewRect.size;
 
-        const nativeWidth = preferredRect ? preferredRect.size.width : width;
-        const nativeHeight = preferredRect ? preferredRect.size.height : height;
+        const nativeWidth = svgSize ? svgSize.width : width;
+        const nativeHeight = svgSize ? svgSize.height : height;
 
         const nativeAspectRatio = nativeWidth / nativeHeight;
         const boundedAspectRatio = width / height;
@@ -82,10 +122,11 @@ export class SVG extends SVGBase {
         if (this.width) {
             return super.getWidth(availableWidth, availableHeight);
         }
-        const viewRect = this._renderer.viewRect;
-        if (viewRect) {
-            const nativeWidth = viewRect.size.width;
-            const nativeHeight = viewRect.size.height;
+        // const svgSize = this._svgkimage.size;
+        const svgSize = this._renderer.viewRect && this._renderer.viewRect.size;
+        if (svgSize) {
+            const nativeWidth = svgSize.width;
+            const nativeHeight = svgSize.height;
             const width = Math.min(nativeWidth, availableWidth);
             const height = this.height ? this.getHeight(availableWidth, availableHeight) : Math.min(nativeHeight, availableHeight);
             let paintedWidth = width;
@@ -118,10 +159,11 @@ export class SVG extends SVGBase {
         if (this.height) {
             return super.getHeight(availableWidth, availableHeight);
         }
-        const viewRect = this._renderer.viewRect;
-        if (viewRect) {
-            const nativeWidth = viewRect.size.width;
-            const nativeHeight = viewRect.size.height;
+        // const svgSize = this._svgkimage.size;
+        const svgSize = this._renderer.viewRect && this._renderer.viewRect.size;
+        if (svgSize) {
+            const nativeWidth = svgSize.width;
+            const nativeHeight = svgSize.height;
             const height = Math.min(nativeHeight, availableHeight);
             const width = this.width ? this.getWidth(availableWidth, availableHeight) : Math.min(nativeHeight, availableHeight);
             let paintedWidth = width;
@@ -159,12 +201,14 @@ export class SVG extends SVGBase {
             canvas.save();
             canvas.translate(scales.px, scales.py);
             canvas.scale(scales.sx, scales.sy, 0, 0);
+            // this._svgkimage.renderInContext(canvas.ctx);
             this._renderer.renderIntoContext(canvas.ctx);
             canvas.restore();
         }
     }
     set src(value: string | File | ImageAsset) {
         this._src = value;
+        // this._svgkimage = getSVGKImage(value);
         this._renderer = getRenderer(value);
     }
     get src(): string | File | ImageAsset {
@@ -182,13 +226,69 @@ export class SVG extends SVGBase {
 
 export class SVGView extends SVGViewBase {
     nativeViewProtected: SVGDocumentView;
+    // nativeViewProtected: SVGKImageView;
     createNativeView() {
-        return SVGDocumentView.alloc().init();
+        const view = SVGDocumentView.alloc().init();
+        view.beTransparent = true;
+        view.backgroundColor = UIColor.clearColor;
+        return view;
+        // return SVGKLayeredImageView.alloc().initWithSVGKImage(SVGKImage.new());
+    }
+    aspectRatio: number;
+    _imageSourceAffectsLayout = false;
+    _setNativeClipToBounds() {
+        // Always set clipsToBounds for images
+        this.nativeViewProtected.clipsToBounds = true;
+    }
+    public onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void {
+        const width = Utils.layout.getMeasureSpecSize(widthMeasureSpec);
+        const widthMode = Utils.layout.getMeasureSpecMode(widthMeasureSpec);
+        const height = Utils.layout.getMeasureSpecSize(heightMeasureSpec);
+        const heightMode = Utils.layout.getMeasureSpecMode(heightMeasureSpec);
+
+        const image = this.nativeViewProtected.renderer.viewRect;
+        // const image = this.nativeViewProtected.image;
+
+        const finiteWidth: boolean = widthMode === Utils.layout.EXACTLY;
+        const finiteHeight: boolean = heightMode === Utils.layout.EXACTLY;
+        // this._imageSourceAffectsLayout = !finiteWidth || !finiteHeight;
+        if (image || this.aspectRatio > 0) {
+            const nativeWidth = image ? Utils.layout.toDevicePixels(image.size.width) : 0;
+            const nativeHeight = image ? Utils.layout.toDevicePixels(image.size.height) : 0;
+            const imgRatio = nativeWidth / nativeHeight;
+            const ratio = this.aspectRatio || imgRatio;
+            if (finiteWidth || finiteHeight) {
+                if (!finiteWidth) {
+                    widthMeasureSpec = Utils.layout.makeMeasureSpec(height * ratio, Utils.layout.EXACTLY);
+                }
+                if (!finiteHeight) {
+                    heightMeasureSpec = Utils.layout.makeMeasureSpec(width / ratio, Utils.layout.EXACTLY);
+                }
+            } else {
+                const viewRatio = width / (height || 1000000000000);
+                if (imgRatio > viewRatio) {
+                    const w = Math.min(nativeWidth, width);
+                    widthMeasureSpec = Utils.layout.makeMeasureSpec(w, Utils.layout.EXACTLY);
+                    heightMeasureSpec = Utils.layout.makeMeasureSpec(w / ratio, Utils.layout.EXACTLY);
+                } else {
+                    const h = Math.min(nativeHeight, height);
+                    heightMeasureSpec = Utils.layout.makeMeasureSpec(h, Utils.layout.EXACTLY);
+                    widthMeasureSpec = Utils.layout.makeMeasureSpec(h * ratio, Utils.layout.EXACTLY);
+                }
+            }
+        }
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
     [srcProperty.setNative](value) {
+        // this.nativeViewProtected.image = getSVGKImage(value);
         this.nativeViewProtected.renderer = getRenderer(value);
+        // if (this._imageSourceAffectsLayout) {
+        //     this._imageSourceAffectsLayout = false;
+        //     this.requestLayout();
+        // }
     }
     [stretchProperty.setNative](value: 'none' | 'aspectFill' | 'aspectFit' | 'fill') {
+        // this.nativeViewProtected.contentMode = getUIImageScaleType(value);
         switch (value) {
             case 'aspectFit':
                 this.nativeViewProtected.layer.contentsGravity = kCAGravityResizeAspect;

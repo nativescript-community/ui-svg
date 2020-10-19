@@ -30,7 +30,6 @@
     },
     "homepage": "https://github.com/nativescript-community/ui-svg#readme",
     "dependencies": {
-        "@nativescript-community/text": "^1.3.3",
         "@nativescript-community/ui-canvas": "^4.0.26"
     }
 }

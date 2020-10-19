@@ -1,10 +1,17 @@
 import { Canvas, CanvasView } from '@nativescript-community/ui-canvas';
-import { File, ImageAsset, Length, PercentLength, Utils, knownFolders, path } from '@nativescript/core';
+import { File, ImageAsset, Length, PercentLength, Screen, Utils, knownFolders, path } from '@nativescript/core';
 import { SVG as SVGBase, SVGView as SVGViewBase, srcProperty, stretchProperty } from './index.common';
 export { CanvasSVG } from './index.common';
 import { RESOURCE_PREFIX, ad, isFileOrResourcePath, isFontIconURI } from '@nativescript/core/utils/utils';
 import { stretchLastChildProperty } from '@nativescript/core/ui/layouts/dock-layout';
 
+let SDK_INT = -1;
+function getSDK() {
+    if (SDK_INT === -1) {
+        SDK_INT = android.os.Build.VERSION.SDK_INT;
+    }
+    return SDK_INT;
+}
 function getSVG(src: string | ImageAsset | File) {
     let imagePath: string;
     if (src instanceof File) {
@@ -196,29 +203,136 @@ export class SVG extends SVGBase {
     }
 }
 
+// export class SVGView extends SVGViewBase {
+//     nativeViewProtected: com.caverock.androidsvg.SVGImageView;
+//     createNativeView() {
+//         return new com.caverock.androidsvg.SVGImageView(this._context);
+//     }
+
+//     [srcProperty.setNative](value) {
+//         this.nativeViewProtected.setSVG(getSVG(value));
+//     }
+//     [stretchProperty.setNative](value: 'none' | 'aspectFill' | 'aspectFit' | 'fill') {
+//         switch (value) {
+//             case 'aspectFit':
+//                 this.nativeViewProtected.setScaleType(android.widget.ImageView.ScaleType.FIT_CENTER);
+//                 break;
+//             case 'aspectFill':
+//                 this.nativeViewProtected.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
+//                 break;
+//             case 'fill':
+//                 this.nativeViewProtected.setScaleType(android.widget.ImageView.ScaleType.FIT_XY);
+//                 break;
+//             case 'none':
+//             default:
+//                 this.nativeViewProtected.setScaleType(android.widget.ImageView.ScaleType.FIT_CENTER);
+//                 break;
+//         }
+//     }
+// }
+
+@NativeClass
+class MySVGView extends android.view.View {
+    private _svg: com.caverock.androidsvg.SVG;
+    private renderOptions = new com.caverock.androidsvg.RenderOptions();
+
+    constructor(context) {
+        super(context);
+    }
+    onDraw(canvas: android.graphics.Canvas) {
+        this._svg.renderToCanvas(canvas, this.renderOptions);
+    }
+    setSvg(svg: com.caverock.androidsvg.SVG) {
+        this._svg = svg;
+        if (svg) {
+            svg.setDocumentWidth('100%');
+            svg.setDocumentHeight('100%');
+        }
+    }
+    setRatio(ratio: com.caverock.androidsvg.PreserveAspectRatio) {
+        this.renderOptions.preserveAspectRatio(ratio);
+    }
+    aspectRatio: number;
+    // _imageSourceAffectsLayout = false;
+    public onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void {
+        // We don't call super because we measure native view with specific size.
+        const width = Utils.layout.getMeasureSpecSize(widthMeasureSpec);
+        const widthMode = Utils.layout.getMeasureSpecMode(widthMeasureSpec);
+        const height = Utils.layout.getMeasureSpecSize(heightMeasureSpec);
+        const heightMode = Utils.layout.getMeasureSpecMode(heightMeasureSpec);
+
+        const image = this._svg && this._svg.getDocumentViewBox();
+        // const image = this.nativeViewProtected.image;
+
+        // const measureWidth = Math.max(nativeWidth, this.effectiveMinWidth);
+        // const measureHeight = Math.max(nativeHeight, this.effectiveMinHeight);
+
+        const finiteWidth: boolean = widthMode === Utils.layout.EXACTLY;
+        const finiteHeight: boolean = heightMode === Utils.layout.EXACTLY;
+        // this._imageSourceAffectsLayout = !finiteWidth || !finiteHeight;
+        if (image || this.aspectRatio > 0) {
+            const nativeWidth = image ? Utils.layout.toDevicePixels(image.width()) : 0;
+            const nativeHeight = image ? Utils.layout.toDevicePixels(image.height()) : 0;
+            const imgRatio = nativeWidth / nativeHeight;
+            const ratio = this.aspectRatio || imgRatio;
+            if (finiteWidth || finiteHeight) {
+                if (!finiteWidth) {
+                    widthMeasureSpec = Utils.layout.makeMeasureSpec(height * ratio, Utils.layout.EXACTLY);
+                }
+                if (!finiteHeight) {
+                    heightMeasureSpec = Utils.layout.makeMeasureSpec(width / ratio, Utils.layout.EXACTLY);
+                }
+            } else {
+                const viewRatio = width / (height || 1000000000000);
+                if (imgRatio > viewRatio) {
+                    const w = Math.min(nativeWidth, width);
+                    widthMeasureSpec = Utils.layout.makeMeasureSpec(w, Utils.layout.EXACTLY);
+                    heightMeasureSpec = Utils.layout.makeMeasureSpec(w / ratio, Utils.layout.EXACTLY);
+                } else {
+                    const h = Math.min(nativeHeight, height);
+                    heightMeasureSpec = Utils.layout.makeMeasureSpec(h, Utils.layout.EXACTLY);
+                    widthMeasureSpec = Utils.layout.makeMeasureSpec(h * ratio, Utils.layout.EXACTLY);
+                }
+            }
+        }
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+    }
+}
+
 export class SVGView extends SVGViewBase {
-    nativeViewProtected: com.caverock.androidsvg.SVGImageView;
+    nativeViewProtected: MySVGView;
     createNativeView() {
-        return new com.caverock.androidsvg.SVGImageView(this._context);
+        const view = new MySVGView(this._context);
+        if (getSDK() >= 28) {
+            view.setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null);
+        } else {
+            view.setLayerType(android.view.View.LAYER_TYPE_SOFTWARE, null);
+        }
+        return view;
     }
 
     [srcProperty.setNative](value) {
-        this.nativeViewProtected.setSVG(getSVG(value));
+        // this.nativeViewProtected.image = getSVGKImage(value);
+        this.nativeViewProtected.setSvg(getSVG(value));
+        // if (this._imageSourceAffectsLayout) {
+        //     this._imageSourceAffectsLayout = false;
+        //     this.requestLayout();
+        // }
     }
     [stretchProperty.setNative](value: 'none' | 'aspectFill' | 'aspectFit' | 'fill') {
+        // this.nativeViewProtected.contentMode = getUIImageScaleType(value);
         switch (value) {
-            case 'aspectFit':
-                this.nativeViewProtected.setScaleType(android.widget.ImageView.ScaleType.FIT_CENTER);
-                break;
             case 'aspectFill':
-                this.nativeViewProtected.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
+                this.nativeViewProtected.setRatio(com.caverock.androidsvg.PreserveAspectRatio.FULLSCREEN);
+                // this.renderOptions.preserveAspectRatio(com.caverock.androidsvg.PreserveAspectRatio.FULLSCREEN);
                 break;
             case 'fill':
-                this.nativeViewProtected.setScaleType(android.widget.ImageView.ScaleType.FIT_XY);
+                this.nativeViewProtected.setRatio(com.caverock.androidsvg.PreserveAspectRatio.STRETCH);
+                // this.renderOptions.preserveAspectRatio(com.caverock.androidsvg.PreserveAspectRatio.STRETCH);
                 break;
-            case 'none':
-            default:
-                this.nativeViewProtected.setScaleType(android.widget.ImageView.ScaleType.FIT_CENTER);
+            case 'aspectFit':
+                this.nativeViewProtected.setRatio(com.caverock.androidsvg.PreserveAspectRatio.LETTERBOX);
+                // this.renderOptions.preserveAspectRatio(com.caverock.androidsvg.PreserveAspectRatio.LETTERBOX);
                 break;
         }
     }
