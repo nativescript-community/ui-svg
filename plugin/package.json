@@ -1,6 +1,6 @@
 {
     "name": "@nativescript-community/ui-svg",
-    "version": "0.0.0",
+    "version": "0.0.1",
     "main": "./index",
     "sideEffects": false,
     "typings": "./index.d.ts",
