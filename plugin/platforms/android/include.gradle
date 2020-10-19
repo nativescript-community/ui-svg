@@ -1,0 +1,9 @@
+repositories {
+	google()
+	jcenter()
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'com.caverock:androidsvg-aar:1.4'
+}

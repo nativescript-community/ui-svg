@@ -1,0 +1,36 @@
+{
+    "name": "@nativescript-community/ui-svg",
+    "version": "0.0.0",
+    "main": "./index",
+    "sideEffects": false,
+    "typings": "./index.d.ts",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/nativescript-community/ui-svg.git"
+    },
+    "nativescript": {
+        "platforms": {
+            "android": "6.1.0",
+            "ios": "6.1.0"
+        }
+    },
+    "keywords": [
+        "NativeScript",
+        "JavaScript",
+        "Android",
+        "iOS"
+    ],
+    "author": {
+        "name": "Martin Guillon",
+        "email": "martin@akylas.fr"
+    },
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/nativescript-community/ui-svg/issues"
+    },
+    "homepage": "https://github.com/nativescript-community/ui-svg#readme",
+    "dependencies": {
+        "@nativescript-community/text": "^1.3.3",
+        "@nativescript-community/ui-canvas": "^4.0.26"
+    }
+}
