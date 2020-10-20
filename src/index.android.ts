@@ -1,9 +1,8 @@
-import { Canvas, CanvasView, Paint } from '@nativescript-community/ui-canvas';
-import { File, ImageAsset, Length, PercentLength, Screen, Utils, knownFolders, path } from '@nativescript/core';
-import { SVG as SVGBase, SVGView as SVGViewBase, srcProperty, stretchProperty, xfermodeFromString } from './index.common';
+import { Canvas, CanvasView } from '@nativescript-community/ui-canvas';
+import { File, ImageAsset, Length, Screen, Utils, knownFolders, path } from '@nativescript/core';
+import { RESOURCE_PREFIX, ad, isFileOrResourcePath } from '@nativescript/core/utils/utils';
+import { SVG as SVGBase, SVGView as SVGViewBase, srcProperty, xfermodeFromString } from './index.common';
 export { CanvasSVG } from './index.common';
-import { RESOURCE_PREFIX, ad, isFileOrResourcePath, isFontIconURI } from '@nativescript/core/utils/utils';
-import { stretchLastChildProperty } from '@nativescript/core/ui/layouts/dock-layout';
 
 let SDK_INT = -1;
 function getSDK() {

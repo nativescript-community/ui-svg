@@ -1,10 +1,7 @@
-import { cssProperty } from '@nativescript-community/text';
-import { Canvas, CanvasView, LayoutAlignment, Paint, PorterDuffMode, RectF, StaticLayout } from '@nativescript-community/ui-canvas';
-import Shape, { colorProperty, lengthProperty, numberProperty, percentLengthProperty, stringProperty } from '@nativescript-community/ui-canvas/shapes/shape';
-import { CSSType, ChangedData, Color, ImageAsset, Length, Observable, ObservableArray, PercentLength, Property, View, paddingLeftProperty, profile, zeroLength } from '@nativescript/core';
-import { FontStyle, FontWeight } from '@nativescript/core/ui/styling/font';
-import { TextAlignment, TextDecoration, TextTransform, WhiteSpace } from '@nativescript/core/ui/text-base';
-import { layout } from '@nativescript/core/utils/utils';
+import { Canvas, CanvasView, PorterDuffMode } from '@nativescript-community/ui-canvas';
+import Shape, { lengthProperty, percentLengthProperty } from '@nativescript-community/ui-canvas/shapes/shape';
+import { CSSType, ImageAsset, Length, PercentLength, Property, View, zeroLength } from '@nativescript/core';
+import { TextTransform } from '@nativescript/core/ui/text-base';
 
 export function xfermodeFromString(str) {
     switch (str) {
@@ -35,7 +32,7 @@ export function xfermodeFromString(str) {
         case 'src_out':
             return PorterDuffMode.SRC_OUT;
         default:
-            break;
+            return null;
     }
 }
 function getCapitalizedString(str: string): string {

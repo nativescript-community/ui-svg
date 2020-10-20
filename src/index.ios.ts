@@ -1,4 +1,4 @@
-import { Canvas, CanvasView, Paint, PorterDuffMode, PorterDuffXfermode } from '@nativescript-community/ui-canvas';
+import { Canvas, CanvasView, Paint, PorterDuffXfermode } from '@nativescript-community/ui-canvas';
 import { File, ImageAsset, Screen, Utils, knownFolders, path } from '@nativescript/core';
 import { RESOURCE_PREFIX, isFileOrResourcePath } from '@nativescript/core/utils/utils';
 import { SVG as SVGBase, SVGView as SVGViewBase, srcProperty, stretchProperty, xfermodeFromString } from './index.common';
