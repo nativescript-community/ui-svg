@@ -1,5 +1,5 @@
 module.exports = {
-    extends: ['plugin:prettier/recommended'],
+    extends: ['prettier'],
     plugins: ['prettier', '@typescript-eslint'],
     parser: '@typescript-eslint/parser',
     parserOptions: {
@@ -8,7 +8,6 @@ module.exports = {
     },
     rules: {
         'prettier/prettier': 'warn',
-        'no-redeclare': 'off',
         '@typescript-eslint/adjacent-overload-signatures': 'error',
         '@typescript-eslint/array-type': 'error',
         '@typescript-eslint/await-thenable': 'error',
