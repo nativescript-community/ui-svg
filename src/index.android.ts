@@ -1,6 +1,6 @@
-import { Canvas, CanvasView } from '@nativescript-community/ui-canvas';
+import { Canvas, CanvasView, Paint } from '@nativescript-community/ui-canvas';
 import { File, ImageAsset, Length, PercentLength, Screen, Utils, knownFolders, path } from '@nativescript/core';
-import { SVG as SVGBase, SVGView as SVGViewBase, srcProperty, stretchProperty } from './index.common';
+import { SVG as SVGBase, SVGView as SVGViewBase, srcProperty, stretchProperty, xfermodeFromString } from './index.common';
 export { CanvasSVG } from './index.common';
 import { RESOURCE_PREFIX, ad, isFileOrResourcePath, isFontIconURI } from '@nativescript/core/utils/utils';
 import { stretchLastChildProperty } from '@nativescript/core/ui/layouts/dock-layout';
@@ -51,9 +51,13 @@ declare module '@nativescript-community/ui-canvas' {
         _native: android.graphics.Canvas;
     }
 }
+
+let bgdImagePaint: android.graphics.Paint;
+
 export class SVG extends SVGBase {
     _svg: com.caverock.androidsvg.SVG;
     _src: string | File | ImageAsset;
+    _cachedImage: android.graphics.Bitmap;
     private renderOptions = new com.caverock.androidsvg.RenderOptions();
 
     getWidth(availableWidth, availableHeight) {
@@ -130,17 +134,15 @@ export class SVG extends SVGBase {
     }
     drawOnCanvas(canvas: Canvas, parent: CanvasView) {
         if (this._svg) {
+            // const startTime = new Date().valueOf();
+            // const wasCached = !!this._cachedImage;
+            const svg = this._svg;
             const availableWidth = Utils.layout.toDevicePixels(canvas.getWidth());
             const availableHeight = Utils.layout.toDevicePixels(canvas.getHeight());
             let options = this.renderOptions;
             const width = this.getWidth(availableWidth, availableHeight);
             const height = this.getHeight(availableWidth, availableHeight);
-            // if (this.width || this.height) {
-            const oldWidth = this._svg.getDocumentWidth();
-            const oldHeight = this._svg.getDocumentHeight();
-            this._svg.setDocumentWidth('100%');
-            this._svg.setDocumentHeight('100%');
-            const box = this._svg.getDocumentViewBox();
+            const box = svg.getDocumentViewBox();
             const nativeWidth = box ? box.width() : width;
             const nativeHeight = box ? box.height() : height;
 
@@ -150,33 +152,52 @@ export class SVG extends SVGBase {
             let paintedWidth = width;
             let paintedHeight = height;
             if (nativeAspectRatio >= boundedAspectRatio) {
-                // blank space on top and bottom
                 paintedHeight = paintedWidth / nativeAspectRatio;
             } else {
                 paintedWidth = paintedHeight * nativeAspectRatio;
             }
             const xOrigin = (width - paintedWidth) / 2.0;
             const yOrigin = (height - paintedHeight) / 2.0;
-            options = options.viewPort(
-                -xOrigin + Utils.layout.toDeviceIndependentPixels(Length.toDevicePixels(this.left)),
-                -yOrigin + Utils.layout.toDeviceIndependentPixels(Length.toDevicePixels(this.top)),
-                width,
-                height
-            );
             options = options.preserveAspectRatio(this._preserveAspectRatio);
-            this._svg.renderToCanvas(canvas._native, options);
-            this._svg.setDocumentWidth(oldWidth);
-            this._svg.setDocumentHeight(oldHeight);
-            // } else {
-            //     this._svg.setDocumentWidth('100%');
-            //     this._svg.setDocumentHeight('100%');
-            //     this._svg.renderToCanvas(canvas._native);
-            // }
+
+            if (this.blendingMode || this.cache) {
+                let newBitmap: android.graphics.Bitmap = this._cachedImage;
+                const scale = Screen.mainScreen.scale;
+                if (!this.cache || !this._cachedImage) {
+                    newBitmap = android.graphics.Bitmap.createBitmap(width * scale, height * scale, android.graphics.Bitmap.Config.ARGB_8888);
+                    const bmcanvas = new android.graphics.Canvas(newBitmap);
+                    bmcanvas.setDensity(Math.round(scale * 160));
+                    svg.renderToCanvas(bmcanvas, options);
+                    if (this.cache) {
+                        this._cachedImage = newBitmap;
+                    }
+                }
+                if (this.blendingMode) {
+                    if (!bgdImagePaint) {
+                        bgdImagePaint = new android.graphics.Paint();
+                    }
+                    bgdImagePaint.setXfermode(new android.graphics.PorterDuffXfermode(xfermodeFromString(this.blendingMode)));
+                }
+                canvas.drawBitmap(newBitmap, new android.graphics.Rect(0, 0, width * scale, height * scale), new android.graphics.Rect(xOrigin, yOrigin, width, height), bgdImagePaint as any);
+            } else {
+                options.viewPort(
+                    -xOrigin + Utils.layout.toDeviceIndependentPixels(Length.toDevicePixels(this.left)),
+                    -yOrigin + Utils.layout.toDeviceIndependentPixels(Length.toDevicePixels(this.top)),
+                    width,
+                    height
+                );
+                svg.renderToCanvas(canvas._native, options);
+            }
+            // console.log('drawSvg', wasCached, Date.now() - startTime, 'ms');
         }
     }
     set src(value: string | File | ImageAsset) {
         this._src = value;
         this._svg = getSVG(value);
+        if (this._svg) {
+            this._svg.setDocumentWidth('100%');
+            this._svg.setDocumentHeight('100%');
+        }
     }
     get src(): string | File | ImageAsset {
         return this._src;
@@ -231,6 +252,22 @@ export class SVG extends SVGBase {
 //     }
 // }
 
+// @NativeClass
+// class MySVG extends com.caverock.androidsvg.SVG {
+//     renderToCanvas(canvas: android.graphics.Canvas, renderOptions: com.caverock.androidsvg.RenderOptions) {
+//         if (renderOptions == null) {
+//             renderOptions = new com.caverock.androidsvg.RenderOptions();
+//         }
+
+//         if (!renderOptions.hasViewPort()) {
+//             renderOptions.viewPort(0, 0, canvas.getWidth(), canvas.getHeight());
+//         }
+
+//         const renderer = new (com as any).caverock.androidsvg.SVGAndroidRenderer(canvas, this.getRenderDPI(), null);
+
+//         renderer.renderDocument(this, renderOptions);
+//     }
+// }
 @NativeClass
 class MySVGView extends android.view.View {
     private _svg: com.caverock.androidsvg.SVG;
@@ -240,8 +277,12 @@ class MySVGView extends android.view.View {
         super(context);
     }
     onDraw(canvas: android.graphics.Canvas) {
+        if (this._blendingMode !== undefined) {
+            const picture = this._svg.renderToPicture(this.renderOptions);
+        }
         this._svg.renderToCanvas(canvas, this.renderOptions);
     }
+    _blendingMode: android.graphics.PorterDuff.Mode;
     setSvg(svg: com.caverock.androidsvg.SVG) {
         this._svg = svg;
         if (svg) {
@@ -319,21 +360,21 @@ export class SVGView extends SVGViewBase {
         //     this.requestLayout();
         // }
     }
-    [stretchProperty.setNative](value: 'none' | 'aspectFill' | 'aspectFit' | 'fill') {
-        // this.nativeViewProtected.contentMode = getUIImageScaleType(value);
-        switch (value) {
-            case 'aspectFill':
-                this.nativeViewProtected.setRatio(com.caverock.androidsvg.PreserveAspectRatio.FULLSCREEN);
-                // this.renderOptions.preserveAspectRatio(com.caverock.androidsvg.PreserveAspectRatio.FULLSCREEN);
-                break;
-            case 'fill':
-                this.nativeViewProtected.setRatio(com.caverock.androidsvg.PreserveAspectRatio.STRETCH);
-                // this.renderOptions.preserveAspectRatio(com.caverock.androidsvg.PreserveAspectRatio.STRETCH);
-                break;
-            case 'aspectFit':
-                this.nativeViewProtected.setRatio(com.caverock.androidsvg.PreserveAspectRatio.LETTERBOX);
-                // this.renderOptions.preserveAspectRatio(com.caverock.androidsvg.PreserveAspectRatio.LETTERBOX);
-                break;
-        }
-    }
+    // [stretchProperty.setNative](value: 'none' | 'aspectFill' | 'aspectFit' | 'fill') {
+    //     // this.nativeViewProtected.contentMode = getUIImageScaleType(value);
+    //     switch (value) {
+    //         case 'aspectFill':
+    //             this.nativeViewProtected.setRatio(com.caverock.androidsvg.PreserveAspectRatio.FULLSCREEN);
+    //             // this.renderOptions.preserveAspectRatio(com.caverock.androidsvg.PreserveAspectRatio.FULLSCREEN);
+    //             break;
+    //         case 'fill':
+    //             this.nativeViewProtected.setRatio(com.caverock.androidsvg.PreserveAspectRatio.STRETCH);
+    //             // this.renderOptions.preserveAspectRatio(com.caverock.androidsvg.PreserveAspectRatio.STRETCH);
+    //             break;
+    //         case 'aspectFit':
+    //             this.nativeViewProtected.setRatio(com.caverock.androidsvg.PreserveAspectRatio.LETTERBOX);
+    //             // this.renderOptions.preserveAspectRatio(com.caverock.androidsvg.PreserveAspectRatio.LETTERBOX);
+    //             break;
+    //     }
+    // }
 }

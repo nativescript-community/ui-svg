@@ -1,8 +1,9 @@
-import { Canvas, CanvasView } from '@nativescript-community/ui-canvas';
-import { File, ImageAsset, Utils, knownFolders, path } from '@nativescript/core';
+import { Canvas, CanvasView, Paint, PorterDuffMode, PorterDuffXfermode } from '@nativescript-community/ui-canvas';
+import { File, ImageAsset, Screen, Utils, knownFolders, path } from '@nativescript/core';
 import { RESOURCE_PREFIX, isFileOrResourcePath } from '@nativescript/core/utils/utils';
-import { SVG as SVGBase, SVGView as SVGViewBase, srcProperty, stretchProperty } from './index.common';
+import { SVG as SVGBase, SVGView as SVGViewBase, srcProperty, stretchProperty, xfermodeFromString } from './index.common';
 export { CanvasSVG } from './index.common';
+
 // function getUIImageScaleType(scaleType: string) {
 //     switch (scaleType) {
 //         case 'aspectFill':
@@ -18,6 +19,8 @@ export { CanvasSVG } from './index.common';
 //     }
 //     return null;
 // }
+
+let bgdImagePaint: Paint;
 function getRenderer(src: string | ImageAsset | File) {
     let imagePath: string;
     if (src instanceof File) {
@@ -76,6 +79,7 @@ export class SVG extends SVGBase {
     _renderer: SVGRenderer;
     // _svgkimage: SVGKImage;
     _src: string | File | ImageAsset;
+    _cachedImage: UIImage;
 
     makeScales(availableWidth, availableHeight) {
         const width = this.getWidth(availableWidth, availableHeight);
@@ -95,7 +99,6 @@ export class SVG extends SVGBase {
         const myGravity = this._stretch;
         if (myGravity === 'aspectFit') {
             if (nativeAspectRatio >= boundedAspectRatio) {
-                // blank space on top and bottom
                 paintedHeight = paintedWidth / nativeAspectRatio;
             } else {
                 paintedWidth = paintedHeight * nativeAspectRatio;
@@ -105,7 +108,6 @@ export class SVG extends SVGBase {
             return { px: 0, py: yOrigin, sx: paintedWidth / nativeWidth, sy: paintedHeight / nativeHeight };
         } else if (myGravity === 'aspectFill') {
             if (nativeAspectRatio <= boundedAspectRatio) {
-                // blank space on top and bottom
                 paintedHeight = paintedWidth / nativeAspectRatio;
             } else {
                 paintedWidth = paintedHeight * nativeAspectRatio;
@@ -118,6 +120,7 @@ export class SVG extends SVGBase {
             return { px: 0, py: 0, sx: width / nativeWidth, sy: height / nativeHeight };
         }
     }
+
     getWidth(availableWidth, availableHeight) {
         if (this.width) {
             return super.getWidth(availableWidth, availableHeight);
@@ -135,7 +138,6 @@ export class SVG extends SVGBase {
             const boundedAspectRatio = width / height;
             if (this._stretch === 'aspectFit') {
                 if (nativeAspectRatio >= boundedAspectRatio) {
-                    // blank space on top and bottom
                     paintedHeight = paintedWidth / nativeAspectRatio;
                 } else {
                     paintedWidth = paintedHeight * nativeAspectRatio;
@@ -143,7 +145,6 @@ export class SVG extends SVGBase {
                 return paintedWidth;
             } else if (this._stretch === 'aspectFill') {
                 if (nativeAspectRatio <= boundedAspectRatio) {
-                    // blank space on top and bottom
                     paintedHeight = paintedWidth / nativeAspectRatio;
                 } else {
                     paintedWidth = paintedHeight * nativeAspectRatio;
@@ -172,7 +173,6 @@ export class SVG extends SVGBase {
             const boundedAspectRatio = width / height;
             if (this._stretch === 'aspectFit') {
                 if (nativeAspectRatio >= boundedAspectRatio) {
-                    // blank space on top and bottom
                     paintedHeight = paintedWidth / nativeAspectRatio;
                 } else {
                     paintedWidth = paintedHeight * nativeAspectRatio;
@@ -180,7 +180,6 @@ export class SVG extends SVGBase {
                 return paintedHeight;
             } else if (this._stretch === 'aspectFill') {
                 if (nativeAspectRatio <= boundedAspectRatio) {
-                    // blank space on top and bottom
                     paintedHeight = paintedWidth / nativeAspectRatio;
                 } else {
                     paintedWidth = paintedHeight * nativeAspectRatio;
@@ -194,15 +193,52 @@ export class SVG extends SVGBase {
     }
     drawOnCanvas(canvas: Canvas, parent: CanvasView) {
         if (this._renderer) {
+            // const startTime = new Date().valueOf();
+            // const wasCached = !!this._cachedImage;
             const availableWidth = Utils.layout.toDevicePixels(canvas.getWidth());
             const availableHeight = Utils.layout.toDevicePixels(canvas.getHeight());
 
             const scales = this.makeScales(availableWidth, availableHeight);
             canvas.save();
-            canvas.translate(scales.px, scales.py);
-            canvas.scale(scales.sx, scales.sy, 0, 0);
-            // this._svgkimage.renderInContext(canvas.ctx);
-            this._renderer.renderIntoContext(canvas.ctx);
+            if (this.blendingMode || this.cache) {
+                let newImage: UIImage = this._cachedImage;
+                if (!this.cache || !this._cachedImage) {
+                    const svgSize = this._renderer.viewRect && this._renderer.viewRect.size;
+                    UIGraphicsBeginImageContextWithOptions(svgSize, false, Screen.mainScreen.scale);
+                    const _context = UIGraphicsGetCurrentContext();
+                    this._renderer.renderIntoContext(_context);
+
+                    newImage = UIGraphicsGetImageFromCurrentImageContext();
+                    UIGraphicsEndImageContext();
+                    if (this.cache) {
+                        this._cachedImage = newImage;
+                    }
+                }
+
+                // const coreImage = CIImage.alloc().initWithCGImage(_newImage.CGImage);
+
+                // const filter = CIFilter.filterWithName('CIMultiplyBlendMode');
+                // filter.setValueForKey(coreImage, 'inputImage');
+
+                // const output = filter.outputImage;
+                // const context = CIContext.context();
+                // const CGImage = context.createCGImageFromRect(output, output.extent);
+
+                if (this.blendingMode) {
+                    if (!bgdImagePaint) {
+                        bgdImagePaint = new Paint();
+                    }
+                    bgdImagePaint.setXfermode(new PorterDuffXfermode(xfermodeFromString(this.blendingMode)));
+                }
+                canvas.translate(scales.px, scales.py);
+                canvas.scale(scales.sx, scales.sy, 0, 0);
+                canvas.drawBitmap(newImage, 0, 0, bgdImagePaint);
+            } else {
+                canvas.translate(scales.px, scales.py);
+                canvas.scale(scales.sx, scales.sy, 0, 0);
+                this._renderer.renderIntoContext(canvas.ctx);
+            }
+            // console.log('drawSvg', wasCached, Date.now() - startTime, 'ms');
             canvas.restore();
         }
     }
@@ -229,8 +265,9 @@ export class SVGView extends SVGViewBase {
     // nativeViewProtected: SVGKImageView;
     createNativeView() {
         const view = SVGDocumentView.alloc().init();
-        view.beTransparent = true;
+        // view.beTransparent = true;
         view.backgroundColor = UIColor.clearColor;
+        view.opaque = false;
         return view;
         // return SVGKLayeredImageView.alloc().initWithSVGKImage(SVGKImage.new());
     }
@@ -305,4 +342,15 @@ export class SVGView extends SVGViewBase {
                 break;
         }
     }
+    // [blendingModeProperty.setNative](value: string) {
+    //     console.log('CIFilter', CIFilter.filterNamesInCategory('CICategoryCompositeOperation'));
+    //     switch (value) {
+    //         case 'multiply':
+    //             this.nativeViewProtected.layer.compositingFilter = 'multiplyBlendMode';
+    //             break;
+    //         case 'lighten':
+    //             this.nativeViewProtected.layer.compositingFilter = 'lightenBlendMode';
+    //             break;
+    //     }
+    // }
 }
