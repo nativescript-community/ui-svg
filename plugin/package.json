@@ -1,12 +1,13 @@
 {
     "name": "@nativescript-community/ui-svg",
     "version": "0.0.3",
+    "description": "Adds support for SVGs in your NativeScript apps.",
     "main": "./index",
     "sideEffects": false,
     "typings": "./index.d.ts",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/nativescript-community/ui-svg.git"
+        "url": "https://github.com/nativescript-community/ui-svg"
     },
     "nativescript": {
         "platforms": {
@@ -18,7 +19,8 @@
         "NativeScript",
         "JavaScript",
         "Android",
-        "iOS"
+        "iOS",
+        "Vue"
     ],
     "author": {
         "name": "Martin Guillon",
@@ -28,7 +30,6 @@
     "bugs": {
         "url": "https://github.com/nativescript-community/ui-svg/issues"
     },
-    "homepage": "https://github.com/nativescript-community/ui-svg#readme",
     "dependencies": {
         "@nativescript-community/ui-canvas": "^4.0.26"
     }
