@@ -288,7 +288,7 @@ export class SVGView extends SVGViewBase {
 
         const finiteWidth: boolean = widthMode === Utils.layout.EXACTLY;
         const finiteHeight: boolean = heightMode === Utils.layout.EXACTLY;
-        // this._imageSourceAffectsLayout = !finiteWidth || !finiteHeight;
+        this._imageSourceAffectsLayout = !finiteWidth || !finiteHeight;
         if (image || this.aspectRatio > 0) {
             const nativeWidth = image ? Utils.layout.toDevicePixels(image.size.width) : 0;
             const nativeHeight = image ? Utils.layout.toDevicePixels(image.size.height) : 0;
@@ -319,10 +319,10 @@ export class SVGView extends SVGViewBase {
     [srcProperty.setNative](value) {
         // this.nativeViewProtected.image = getSVGKImage(value);
         this.nativeViewProtected.renderer = getRenderer(value);
-        // if (this._imageSourceAffectsLayout) {
-        //     this._imageSourceAffectsLayout = false;
-        //     this.requestLayout();
-        // }
+        if (this._imageSourceAffectsLayout) {
+            this._imageSourceAffectsLayout = false;
+            this.requestLayout();
+        }
     }
     [stretchProperty.setNative](value: 'none' | 'aspectFill' | 'aspectFit' | 'fill') {
         // this.nativeViewProtected.contentMode = getUIImageScaleType(value);
