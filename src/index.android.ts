@@ -63,7 +63,11 @@ export class SVG extends SVGBase {
         if (this.width) {
             return super.getWidth(availableWidth, availableHeight);
         }
-        const viewRect = this._svg.getDocumentViewBox();
+        const svg = this._svg;
+        if (!svg) {
+            return 0;
+        }
+        const viewRect = svg.getDocumentViewBox();
         if (viewRect) {
             const nativeWidth = viewRect.width();
             const nativeHeight = viewRect.height();
@@ -99,7 +103,11 @@ export class SVG extends SVGBase {
         if (this.height) {
             return super.getHeight(availableWidth, availableHeight);
         }
-        const viewRect = this._svg.getDocumentViewBox();
+        const svg = this._svg;
+        if (!svg) {
+            return 0;
+        }
+        const viewRect = svg.getDocumentViewBox();
         if (viewRect) {
             const nativeWidth = viewRect.width();
             const nativeHeight = viewRect.height();
@@ -132,10 +140,10 @@ export class SVG extends SVGBase {
         return 0;
     }
     drawOnCanvas(canvas: Canvas, parent: CanvasView) {
-        if (this._svg) {
+        const svg = this._svg;
+        if (svg) {
             // const startTime = new Date().valueOf();
             // const wasCached = !!this._cachedImage;
-            const svg = this._svg;
             const availableWidth = Utils.layout.toDevicePixels(canvas.getWidth());
             const availableHeight = Utils.layout.toDevicePixels(canvas.getHeight());
             let options = this.renderOptions;
@@ -276,10 +284,14 @@ class MySVGView extends android.view.View {
         super(context);
     }
     onDraw(canvas: android.graphics.Canvas) {
-        if (this._blendingMode !== undefined) {
-            const picture = this._svg.renderToPicture(this.renderOptions);
+        const svg = this._svg;
+        if (!svg) {
+            return;
         }
-        this._svg.renderToCanvas(canvas, this.renderOptions);
+        if (this._blendingMode !== undefined) {
+            const picture = svg.renderToPicture(this.renderOptions);
+        }
+        svg.renderToCanvas(canvas, this.renderOptions);
     }
     _blendingMode: android.graphics.PorterDuff.Mode;
     setSvg(svg: com.caverock.androidsvg.SVG) {
@@ -296,13 +308,18 @@ class MySVGView extends android.view.View {
     aspectRatio: number;
     // _imageSourceAffectsLayout = false;
     public onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void {
+        const svg = this._svg;
+        if (!svg) {
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+            return;
+        }
         // We don't call super because we measure native view with specific size.
         const width = Utils.layout.getMeasureSpecSize(widthMeasureSpec);
         const widthMode = Utils.layout.getMeasureSpecMode(widthMeasureSpec);
         const height = Utils.layout.getMeasureSpecSize(heightMeasureSpec);
         const heightMode = Utils.layout.getMeasureSpecMode(heightMeasureSpec);
 
-        const image = this._svg && this._svg.getDocumentViewBox();
+        const image = svg.getDocumentViewBox();
         // const image = this.nativeViewProtected.image;
 
         // const measureWidth = Math.max(nativeWidth, this.effectiveMinWidth);
