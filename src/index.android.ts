@@ -288,6 +288,7 @@ class MySVGView extends android.view.View {
             svg.setDocumentWidth('100%');
             svg.setDocumentHeight('100%');
         }
+        this.invalidate();
     }
     setRatio(ratio: com.caverock.androidsvg.PreserveAspectRatio) {
         this.renderOptions.preserveAspectRatio(ratio);
