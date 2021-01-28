@@ -10,12 +10,11 @@ const TerserPlugin = require('terser-webpack-plugin');
 
 module.exports = (env, params = {}) => {
     if (env.adhoc) {
-        Object.assign(env, {
+        env = Object.assign({}, {
             production: true,
-            // sentry: true,
             sourceMap: true,
-            uglify: true,
-        });
+            uglify: true
+        }, env);
     }
     const {
         appPath = 'app',
