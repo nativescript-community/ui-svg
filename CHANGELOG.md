@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.0.6](https://github.com/nativescript-community/ui-svg/compare/v0.0.5...v0.0.6) (2021-01-28)
+
+
+### Bug Fixes
+
+* **android:** ensure view is redrawn on src change ([476ec62](https://github.com/nativescript-community/ui-svg/commit/476ec62575dda57d5d854f6d44b600d917e2bb85))
+* **android:** prevent accessing null object ([c85c25d](https://github.com/nativescript-community/ui-svg/commit/c85c25d5955195691725758f18658e6f5f8ca754))
+* **ios:** request layout on src change if necessary ([8f0279e](https://github.com/nativescript-community/ui-svg/commit/8f0279e9a6cd53975dc783c35d71423500326653))
+
+
+
+
+
 ## [0.0.5](https://github.com/nativescript-community/ui-svg/compare/v0.0.4...v0.0.5) (2020-11-23)
 
 **Note:** Version bump only for package @nativescript-community/ui-svg
