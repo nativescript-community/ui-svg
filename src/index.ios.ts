@@ -278,20 +278,24 @@ export class SVGView extends SVGViewBase {
         this.nativeViewProtected.clipsToBounds = true;
     }
     public onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void {
+        const renderer = this.nativeViewProtected.renderer;
+        if (!renderer) {
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+            return;
+        }
         const width = Utils.layout.getMeasureSpecSize(widthMeasureSpec);
         const widthMode = Utils.layout.getMeasureSpecMode(widthMeasureSpec);
         const height = Utils.layout.getMeasureSpecSize(heightMeasureSpec);
         const heightMode = Utils.layout.getMeasureSpecMode(heightMeasureSpec);
 
-        const image = this.nativeViewProtected.renderer.viewRect;
-        // const image = this.nativeViewProtected.image;
+        const imageRect = renderer.viewRect;
 
         const finiteWidth: boolean = widthMode === Utils.layout.EXACTLY;
         const finiteHeight: boolean = heightMode === Utils.layout.EXACTLY;
         this._imageSourceAffectsLayout = !finiteWidth || !finiteHeight;
-        if (image || this.aspectRatio > 0) {
-            const nativeWidth = image ? Utils.layout.toDevicePixels(image.size.width) : 0;
-            const nativeHeight = image ? Utils.layout.toDevicePixels(image.size.height) : 0;
+        if (imageRect || this.aspectRatio > 0) {
+            const nativeWidth = imageRect ? Utils.layout.toDevicePixels(imageRect.size.width) : 0;
+            const nativeHeight = imageRect ? Utils.layout.toDevicePixels(imageRect.size.height) : 0;
             const imgRatio = nativeWidth / nativeHeight;
             const ratio = this.aspectRatio || imgRatio;
             if (finiteWidth || finiteHeight) {
