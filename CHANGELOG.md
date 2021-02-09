@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.0.7](https://github.com/nativescript-community/ui-svg/compare/v0.0.6...v0.0.7) (2021-02-09)
+
+
+### Bug Fixes
+
+* **ios:** fix error when no svg set in onMeasure ([31e5e6c](https://github.com/nativescript-community/ui-svg/commit/31e5e6c0480f0074d776100bfc4b47601aa6e57f))
+
+
+
+
+
 ## [0.0.6](https://github.com/nativescript-community/ui-svg/compare/v0.0.5...v0.0.6) (2021-01-28)
 
 
