@@ -1,6 +1,6 @@
 import { Canvas, CanvasView } from '@nativescript-community/ui-canvas';
-import { File, ImageAsset, Length, Screen, Utils, knownFolders, path } from '@nativescript/core';
-import { RESOURCE_PREFIX, ad, isFileOrResourcePath } from '@nativescript/core/utils/utils';
+import { File, Font, ImageAsset, ImageSource, Length, Screen, Utils, knownFolders, path } from '@nativescript/core';
+import { RESOURCE_PREFIX, ad, isDataURI, isFileOrResourcePath } from '@nativescript/core/utils/utils';
 import { SVG as SVGBase, SVGView as SVGViewBase, srcProperty, xfermodeFromString } from './index.common';
 export { CanvasSVG } from './index.common';
 
@@ -275,6 +275,37 @@ export class SVG extends SVGBase {
 //         renderer.renderDocument(this, renderOptions);
 //     }
 // }
+
+@NativeClass
+class SVGExternalFileResolver extends com.caverock.androidsvg.SVGExternalFileResolver {
+    resolveFont(fontFamily: string, fontWeight: number, fontStyle: string) {
+        if (fontFamily) {
+            fontFamily = fontFamily.replace(/\\\//, '/');
+        }
+        return new Font(fontFamily, undefined, fontStyle.toLowerCase() as any, (fontWeight + '') as any).getAndroidTypeface();
+    }
+
+    resolveImage(filename) {
+        let bitmap = null;
+        if (isDataURI(filename)) {
+            const base64Data = filename.split(',')[1];
+            if (base64Data !== undefined) {
+                bitmap = ImageSource.fromBase64(base64Data);
+            }
+        } else if (isFileOrResourcePath(filename)) {
+            if (filename.indexOf(RESOURCE_PREFIX) !== 0) {
+                if (filename.indexOf('~/') === 0) {
+                    filename = path.join(knownFolders.currentApp().path, filename.replace('~/', ''));
+                }
+            }
+            bitmap = ImageSource.fromFileOrResourceSync(filename);
+        }
+        return bitmap;
+    }
+}
+
+com.caverock.androidsvg.SVG.registerExternalFileResolver(new SVGExternalFileResolver());
+
 @NativeClass
 class MySVGView extends android.view.View {
     private _svg: com.caverock.androidsvg.SVG;
