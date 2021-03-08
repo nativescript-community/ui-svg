@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.0.8](https://github.com/nativescript-community/ui-svg/compare/v0.0.7...v0.0.8) (2021-03-08)
+
+
+### Features
+
+* **android:** support loading of fonts and images ([54e0ee0](https://github.com/nativescript-community/ui-svg/commit/54e0ee0a652e11796a2ef7d267407d08af1243b6))
+
+
+
+
+
 ## [0.0.7](https://github.com/nativescript-community/ui-svg/compare/v0.0.6...v0.0.7) (2021-02-09)
 
 
