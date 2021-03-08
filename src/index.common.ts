@@ -1,7 +1,11 @@
 import { Canvas, CanvasView, PorterDuffMode } from '@nativescript-community/ui-canvas';
+import { init } from '@nativescript-community/text';
 import Shape, { lengthProperty, percentLengthProperty } from '@nativescript-community/ui-canvas/shapes/shape';
 import { CSSType, ImageAsset, Length, PercentLength, Property, View, zeroLength } from '@nativescript/core';
 import { TextTransform } from '@nativescript/core/ui/text-base';
+
+// init text to ensure font overrides are called
+init();
 
 export function xfermodeFromString(str) {
     switch (str) {
