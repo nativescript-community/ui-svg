@@ -2,7 +2,6 @@ import { Canvas, CanvasView, PorterDuffMode } from '@nativescript-community/ui-c
 import { init } from '@nativescript-community/text';
 import Shape, { lengthProperty, percentLengthProperty } from '@nativescript-community/ui-canvas/shapes/shape';
 import { CSSType, ImageAsset, Length, PercentLength, Property, View, zeroLength } from '@nativescript/core';
-import { TextTransform } from '@nativescript/core/ui/text-base';
 
 // init text to ensure font overrides are called
 init();
@@ -39,70 +38,6 @@ export function xfermodeFromString(str) {
             return null;
     }
 }
-function getCapitalizedString(str: string): string {
-    const words = str.split(' ');
-    const newWords = [];
-    for (let i = 0, length = words.length; i < length; i++) {
-        const word = words[i].toLowerCase();
-        newWords.push(word.substr(0, 1).toUpperCase() + word.substring(1));
-    }
-
-    return newWords.join(' ');
-}
-
-export function getTransformedText(text: string, textTransform: TextTransform): string {
-    switch (textTransform) {
-        case 'uppercase':
-            return text.toUpperCase();
-        case 'lowercase':
-            return text.toLowerCase();
-        case 'capitalize':
-            return getCapitalizedString(text);
-        case 'none':
-        default:
-            return text;
-    }
-}
-export function computeBaseLineOffset(align, fontAscent, fontDescent, fontBottom, fontTop, fontSize, maxFontSize) {
-    let result = 0;
-    switch (align) {
-        case 'top':
-            result = -maxFontSize - fontBottom - fontTop;
-            break;
-
-        case 'bottom':
-            result = fontBottom;
-            break;
-
-        case 'text-top':
-            result = -maxFontSize - fontDescent - fontAscent;
-            break;
-
-        case 'text-bottom':
-            result = fontBottom - fontDescent;
-            break;
-
-        case 'middle':
-        case 'center':
-            result = (fontAscent - fontDescent) / 2 - fontAscent - maxFontSize / 2;
-            break;
-
-        case 'super':
-            result = -(maxFontSize - fontSize);
-            break;
-
-        case 'sub':
-            result = 0;
-            break;
-    }
-    return result;
-}
-
-export type VerticalTextAlignment = 'initial' | 'top' | 'middle' | 'bottom' | 'center';
-
-// const debugPaint = new Paint();
-// debugPaint.style = Style.STROKE;
-// debugPaint.color = 'red';
 
 export abstract class SVG extends Shape {
     _parent: WeakRef<any>;
@@ -137,48 +72,47 @@ stretchProperty.register(SVGView);
 
 @CSSType('CanvasSVG')
 export class CanvasSVG extends CanvasView {
-    constructor() {
-        super();
-    }
+    // constructor() {
+    //     super();
+    // }
 
     //@ts-ignore
-    set color(value) {
-        this.style.color = value;
-        // this.handlePropertyChange();
-    }
+    // set color(value) {
+    //     this.style.color = value;
+    // }
 
-    get padding(): string | Length {
-        return this.style.padding;
-    }
-    set padding(value: string | Length) {
-        this.style.padding = value;
-    }
+    // get padding(): string | Length {
+    //     return this.style.padding;
+    // }
+    // set padding(value: string | Length) {
+    //     this.style.padding = value;
+    // }
 
-    get paddingTop(): Length {
-        return this.style.paddingTop;
-    }
-    set paddingTop(value: Length) {
-        this.style.paddingTop = value;
-    }
+    // get paddingTop(): Length {
+    //     return this.style.paddingTop;
+    // }
+    // set paddingTop(value: Length) {
+    //     this.style.paddingTop = value;
+    // }
 
-    get paddingRight(): Length {
-        return this.style.paddingRight;
-    }
-    set paddingRight(value: Length) {
-        this.style.paddingRight = value;
-    }
+    // get paddingRight(): Length {
+    //     return this.style.paddingRight;
+    // }
+    // set paddingRight(value: Length) {
+    //     this.style.paddingRight = value;
+    // }
 
-    get paddingBottom(): Length {
-        return this.style.paddingBottom;
-    }
-    set paddingBottom(value: Length) {
-        this.style.paddingBottom = value;
-    }
+    // get paddingBottom(): Length {
+    //     return this.style.paddingBottom;
+    // }
+    // set paddingBottom(value: Length) {
+    //     this.style.paddingBottom = value;
+    // }
 
-    get paddingLeft(): Length {
-        return this.style.paddingLeft;
-    }
-    set paddingLeft(value: Length) {
-        this.style.paddingLeft = value;
-    }
+    // get paddingLeft(): Length {
+    //     return this.style.paddingLeft;
+    // }
+    // set paddingLeft(value: Length) {
+    //     this.style.paddingLeft = value;
+    // }
 }
