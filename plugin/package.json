@@ -31,7 +31,7 @@
         "url": "https://github.com/nativescript-community/ui-svg/issues"
     },
     "dependencies": {
-        "@nativescript-community/text": "^1.4.6",
-        "@nativescript-community/ui-canvas": "^4.0.49"
+        "@nativescript-community/text": "^1.5.3",
+        "@nativescript-community/ui-canvas": "^4.4.0"
     }
 }
