@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.1.0](https://github.com/nativescript-community/ui-svg/compare/v0.0.8...v0.1.0) (2022-04-07)
+
+
+### Bug Fixes
+
+* **ios:** working SVGView with stretch ([cb61b89](https://github.com/nativescript-community/ui-svg/commit/cb61b89efa110d888e351dd2df230408b6656cf1))
+
+
+### Features
+
+* **android:** native api usage ([541d49d](https://github.com/nativescript-community/ui-svg/commit/541d49dfba3f3e0a7cc262885083f930e78eafb2))
+
+
+
+
+
 ## [0.0.8](https://github.com/nativescript-community/ui-svg/compare/v0.0.7...v0.0.8) (2021-03-08)
 
 
