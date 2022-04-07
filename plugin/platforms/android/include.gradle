@@ -1,6 +1,5 @@
 repositories {
 	google()
-	jcenter()
 	mavenCentral()
 }
 
