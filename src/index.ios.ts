@@ -4,21 +4,21 @@ import { RESOURCE_PREFIX, isFileOrResourcePath } from '@nativescript/core/utils/
 import { SVG as SVGBase, SVGView as SVGViewBase, srcProperty, stretchProperty, xfermodeFromString } from './index.common';
 export { CanvasSVG } from './index.common';
 
-// function getUIImageScaleType(scaleType: string) {
-//     switch (scaleType) {
-//         case 'aspectFill':
-//             return UIViewContentMode.ScaleAspectFill;
-//         case 'aspectFit':
-//             return UIViewContentMode.ScaleAspectFit;
-//         case 'fill':
-//             return UIViewContentMode.ScaleToFill;
-//         case 'none':
-//             return UIViewContentMode.TopLeft;
-//         default:
-//             break;
-//     }
-//     return null;
-// }
+function getUIImageScaleType(scaleType: string) {
+    switch (scaleType) {
+        case 'aspectFill':
+            return UIViewContentMode.ScaleAspectFill;
+        case 'aspectFit':
+            return UIViewContentMode.ScaleAspectFit;
+        case 'fill':
+            return UIViewContentMode.ScaleToFill;
+        case 'none':
+            return UIViewContentMode.TopLeft;
+        default:
+            break;
+    }
+    return null;
+}
 
 let bgdImagePaint: Paint;
 function getRenderer(src: string | ImageAsset | File) {
@@ -45,47 +45,45 @@ function getRenderer(src: string | ImageAsset | File) {
     }
     return SVGRenderer.alloc().initWithString(imagePath);
 }
-// function getSVGKImage(src: string | ImageAsset | File) {
-//     let imagePath: string;
-//     if (src instanceof File) {
-//         return SVGKImage.alloc().initWithData(NSData.alloc().initWithContentsOfFile(src.path));
-//     } else if (src instanceof ImageAsset) {
-//         imagePath = src.ios;
-//     } else {
-//         imagePath = src;
-//     }
-//     if (isFileOrResourcePath(imagePath)) {
-//         if (imagePath.indexOf(RESOURCE_PREFIX) === 0) {
-//             const resName = imagePath.substr(RESOURCE_PREFIX.length);
-//             return SVGKImage.imageNamed(resName);
-//         } else if (imagePath.indexOf('~/') === 0) {
-//             const strPath = path.join(knownFolders.currentApp().path, imagePath.replace('~/', ''));
-//             return SVGKImage.imageWithContentsOfFile(strPath);
-//         } else if (imagePath.indexOf('/') === 0) {
-//             return SVGKImage.imageWithContentsOfFile(imagePath);
+function getSVGKImage(src: string | ImageAsset | File) {
+    let imagePath: string;
+    if (src instanceof File) {
+        return SVGKImage.alloc().initWithData(NSData.alloc().initWithContentsOfFile(src.path));
+    } else if (src instanceof ImageAsset) {
+        imagePath = src.ios;
+    } else {
+        imagePath = src;
+    }
+    if (isFileOrResourcePath(imagePath)) {
+        if (imagePath.indexOf(RESOURCE_PREFIX) === 0) {
+            const resName = imagePath.substr(RESOURCE_PREFIX.length);
+            return SVGKImage.imageNamed(resName);
+        } else if (imagePath.indexOf('~/') === 0) {
+            const strPath = path.join(knownFolders.currentApp().path, imagePath.replace('~/', ''));
+            return SVGKImage.imageWithContentsOfFile(strPath);
+        } else if (imagePath.indexOf('/') === 0) {
+            return SVGKImage.imageWithContentsOfFile(imagePath);
+        }
+    }
 
-//             // return com.caverock.androidsvg.SVG.getFromInputStream(stream);
-//         }
-//     }
-
-//     return SVGKImage.imageWithSource(SVGKSourceString.sourceFromContentsOfString(imagePath));
-// }
+    return SVGKImage.imageWithSource(SVGKSourceString.sourceFromContentsOfString(imagePath));
+}
 declare module '@nativescript-community/ui-canvas' {
     interface Canvas {
         ctx: any; // CGContextRef
     }
 }
 export class SVG extends SVGBase {
-    _renderer: SVGRenderer;
-    // _svgkimage: SVGKImage;
+    // _renderer: SVGRenderer;
+    _svgkimage: SVGKImage;
     _src: string | File | ImageAsset;
     _cachedImage: UIImage;
 
     makeScales(availableWidth, availableHeight) {
         const width = this.getWidth(availableWidth, availableHeight);
         const height = this.getHeight(availableWidth, availableHeight);
-        // const svgSize = this._svgkimage.size;
-        const svgSize = this._renderer.viewRect && this._renderer.viewRect.size;
+        const svgSize = this._svgkimage.size;
+        // const svgSize = this._renderer.viewRect && this._renderer.viewRect.size;
 
         const nativeWidth = svgSize ? svgSize.width : width;
         const nativeHeight = svgSize ? svgSize.height : height;
@@ -125,8 +123,8 @@ export class SVG extends SVGBase {
         if (this.width) {
             return super.getWidth(availableWidth, availableHeight);
         }
-        // const svgSize = this._svgkimage.size;
-        const svgSize = this._renderer.viewRect && this._renderer.viewRect.size;
+        const svgSize = this._svgkimage.size;
+        // const svgSize = this._renderer.viewRect && this._renderer.viewRect.size;
         if (svgSize) {
             const nativeWidth = svgSize.width;
             const nativeHeight = svgSize.height;
@@ -160,8 +158,8 @@ export class SVG extends SVGBase {
         if (this.height) {
             return super.getHeight(availableWidth, availableHeight);
         }
-        // const svgSize = this._svgkimage.size;
-        const svgSize = this._renderer.viewRect && this._renderer.viewRect.size;
+        const svgSize = this._svgkimage.size;
+        // const svgSize = this._renderer.viewRect && this._renderer.viewRect.size;
         if (svgSize) {
             const nativeWidth = svgSize.width;
             const nativeHeight = svgSize.height;
@@ -192,7 +190,7 @@ export class SVG extends SVGBase {
         return 0;
     }
     drawOnCanvas(canvas: Canvas, parent: CanvasView) {
-        if (this._renderer) {
+        if (this._svgkimage) {
             // const startTime = new Date().valueOf();
             // const wasCached = !!this._cachedImage;
             const availableWidth = Utils.layout.toDevicePixels(canvas.getWidth());
@@ -203,10 +201,11 @@ export class SVG extends SVGBase {
             if (this.blendingMode || this.cache) {
                 let newImage: UIImage = this._cachedImage;
                 if (!this.cache || !this._cachedImage) {
-                    const svgSize = this._renderer.viewRect && this._renderer.viewRect.size;
+                    const svgSize = this._svgkimage.size;
+                    // const svgSize = this._renderer.viewRect && this._renderer.viewRect.size;
                     UIGraphicsBeginImageContextWithOptions(svgSize, false, Screen.mainScreen.scale);
                     const _context = UIGraphicsGetCurrentContext();
-                    this._renderer.renderIntoContext(_context);
+                    this._svgkimage.renderInContext(_context);
 
                     newImage = UIGraphicsGetImageFromCurrentImageContext();
                     UIGraphicsEndImageContext();
@@ -236,7 +235,7 @@ export class SVG extends SVGBase {
             } else {
                 canvas.translate(scales.px, scales.py);
                 canvas.scale(scales.sx, scales.sy, 0, 0);
-                this._renderer.renderIntoContext(canvas.ctx);
+                this._svgkimage.renderInContext(canvas.ctx);
             }
             // console.log('drawSvg', wasCached, Date.now() - startTime, 'ms');
             canvas.restore();
@@ -244,8 +243,8 @@ export class SVG extends SVGBase {
     }
     set src(value: string | File | ImageAsset) {
         this._src = value;
-        // this._svgkimage = getSVGKImage(value);
-        this._renderer = getRenderer(value);
+        this._svgkimage = getSVGKImage(value);
+        // this._renderer = getRenderer(value);
     }
     get src(): string | File | ImageAsset {
         return this._src;
@@ -261,10 +260,11 @@ export class SVG extends SVGBase {
 }
 
 export class SVGView extends SVGViewBase {
-    nativeViewProtected: SVGDocumentView;
-    // nativeViewProtected: SVGKImageView;
+    // nativeViewProtected: SVGDocumentView;
+    nativeViewProtected: SVGKFastImageView;
     createNativeView() {
-        const view = SVGDocumentView.alloc().init();
+        // const view = SVGDocumentView.alloc().init();
+        const view = SVGKFastImageView.alloc().initWithFrame(CGRectZero);
         // view.beTransparent = true;
         view.backgroundColor = UIColor.clearColor;
         view.opaque = false;
@@ -278,8 +278,8 @@ export class SVGView extends SVGViewBase {
         this.nativeViewProtected.clipsToBounds = true;
     }
     public onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void {
-        const renderer = this.nativeViewProtected.renderer;
-        if (!renderer) {
+        const svgImage = this.nativeViewProtected.image;
+        if (!svgImage) {
             super.onMeasure(widthMeasureSpec, heightMeasureSpec);
             return;
         }
@@ -288,14 +288,15 @@ export class SVGView extends SVGViewBase {
         const height = Utils.layout.getMeasureSpecSize(heightMeasureSpec);
         const heightMode = Utils.layout.getMeasureSpecMode(heightMeasureSpec);
 
-        const imageRect = renderer.viewRect;
+        // const imageRect = svgImage.viewRect;
+        const imageSize = svgImage.size;
 
         const finiteWidth: boolean = widthMode === Utils.layout.EXACTLY;
         const finiteHeight: boolean = heightMode === Utils.layout.EXACTLY;
         this._imageSourceAffectsLayout = !finiteWidth || !finiteHeight;
-        if (imageRect || this.aspectRatio > 0) {
-            const nativeWidth = imageRect ? Utils.layout.toDevicePixels(imageRect.size.width) : 0;
-            const nativeHeight = imageRect ? Utils.layout.toDevicePixels(imageRect.size.height) : 0;
+        if (imageSize || this.aspectRatio > 0) {
+            const nativeWidth = imageSize ? Utils.layout.toDevicePixels(imageSize.width) : 0;
+            const nativeHeight = imageSize ? Utils.layout.toDevicePixels(imageSize.height) : 0;
             const imgRatio = nativeWidth / nativeHeight;
             const ratio = this.aspectRatio || imgRatio;
             if (finiteWidth || finiteHeight) {
@@ -321,40 +322,29 @@ export class SVGView extends SVGViewBase {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
     [srcProperty.setNative](value) {
-        // this.nativeViewProtected.image = getSVGKImage(value);
-        this.nativeViewProtected.renderer = getRenderer(value);
+        this.nativeViewProtected.image = getSVGKImage(value);
+        // this.nativeViewProtected.renderer = getRenderer(value);
         if (this._imageSourceAffectsLayout) {
             this._imageSourceAffectsLayout = false;
             this.requestLayout();
         }
     }
     [stretchProperty.setNative](value: 'none' | 'aspectFill' | 'aspectFit' | 'fill') {
-        // this.nativeViewProtected.contentMode = getUIImageScaleType(value);
-        switch (value) {
-            case 'aspectFit':
-                this.nativeViewProtected.layer.contentsGravity = kCAGravityResizeAspect;
-                break;
-            case 'aspectFill':
-                this.nativeViewProtected.layer.contentsGravity = kCAGravityResizeAspectFill;
-                break;
-            case 'fill':
-                this.nativeViewProtected.layer.contentsGravity = kCAGravityResize;
-                break;
-            case 'none':
-            default:
-                this.nativeViewProtected.layer.contentsGravity = kCAGravityResize;
-                break;
-        }
+        this.nativeViewProtected.contentMode = getUIImageScaleType(value);
+        // switch (value) {
+        //     case 'aspectFit':
+        //         this.nativeViewProtected.layer.contentsGravity = kCAGravityResizeAspect;
+        //         break;
+        //     case 'aspectFill':
+        //         this.nativeViewProtected.layer.contentsGravity = kCAGravityResizeAspectFill;
+        //         break;
+        //     case 'fill':
+        //         this.nativeViewProtected.layer.contentsGravity = kCAGravityResize;
+        //         break;
+        //     case 'none':
+        //     default:
+        //         this.nativeViewProtected.layer.contentsGravity = kCAGravityResize;
+        //         break;
+        // }
     }
-    // [blendingModeProperty.setNative](value: string) {
-    //     console.log('CIFilter', CIFilter.filterNamesInCategory('CICategoryCompositeOperation'));
-    //     switch (value) {
-    //         case 'multiply':
-    //             this.nativeViewProtected.layer.compositingFilter = 'multiplyBlendMode';
-    //             break;
-    //         case 'lighten':
-    //             this.nativeViewProtected.layer.compositingFilter = 'lightenBlendMode';
-    //             break;
-    //     }
-    // }
 }
