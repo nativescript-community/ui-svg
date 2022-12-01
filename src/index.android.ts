@@ -1,6 +1,5 @@
 import { Canvas, CanvasView } from '@nativescript-community/ui-canvas';
 import { File, Font, ImageAsset, ImageSource, Length, Screen, Utils, knownFolders, path } from '@nativescript/core';
-import { RESOURCE_PREFIX, ad, isDataURI, isFileOrResourcePath } from '@nativescript/core/utils/utils';
 import { SVG as SVGBase, SVGView as SVGViewBase, srcProperty, xfermodeFromString } from './index.common';
 export { CanvasSVG } from './index.common';
 
@@ -20,16 +19,16 @@ function getSVG(src: string | ImageAsset | File) {
     } else {
         imagePath = src;
     }
-    if (isFileOrResourcePath(imagePath)) {
-        const context = ad.getApplicationContext();
+    if (Utils.isFileOrResourcePath(imagePath)) {
+        const context = Utils.ad.getApplicationContext();
         const res = context.getResources();
         if (!res) {
             return null;
         }
 
-        if (imagePath.indexOf(RESOURCE_PREFIX) === 0) {
-            const resName = imagePath.substr(RESOURCE_PREFIX.length);
-            const identifier = res.getIdentifier(resName, 'drawable', ad.getApplication().getPackageName());
+        if (imagePath.indexOf(Utils.RESOURCE_PREFIX) === 0) {
+            const resName = imagePath.substr(Utils.RESOURCE_PREFIX.length);
+            const identifier = res.getIdentifier(resName, 'drawable', Utils.ad.getApplication().getPackageName());
             return com.caverock.androidsvg.SVG.getFromResource(res, identifier);
         } else if (imagePath.indexOf('~/') === 0) {
             const strPath = path.join(knownFolders.currentApp().path, imagePath.replace('~/', ''));
@@ -287,13 +286,13 @@ class SVGExternalFileResolver extends com.caverock.androidsvg.SVGExternalFileRes
 
     resolveImage(filename) {
         let bitmap = null;
-        if (isDataURI(filename)) {
+        if (Utils.isDataURI(filename)) {
             const base64Data = filename.split(',')[1];
             if (base64Data !== undefined) {
                 bitmap = ImageSource.fromBase64(base64Data);
             }
-        } else if (isFileOrResourcePath(filename)) {
-            if (filename.indexOf(RESOURCE_PREFIX) !== 0) {
+        } else if (Utils.isFileOrResourcePath(filename)) {
+            if (filename.indexOf(Utils.RESOURCE_PREFIX) !== 0) {
                 if (filename.indexOf('~/') === 0) {
                     filename = path.join(knownFolders.currentApp().path, filename.replace('~/', ''));
                 }

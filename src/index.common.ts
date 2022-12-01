@@ -1,7 +1,7 @@
-import { Canvas, CanvasView, PorterDuffMode } from '@nativescript-community/ui-canvas';
 import { init } from '@nativescript-community/text';
+import { Canvas, CanvasView, PorterDuffMode } from '@nativescript-community/ui-canvas';
 import Shape, { lengthProperty, percentLengthProperty } from '@nativescript-community/ui-canvas/shapes/shape';
-import { CSSType, ImageAsset, Length, PercentLength, Property, View, zeroLength } from '@nativescript/core';
+import { CSSType, CoreTypes, ImageAsset, Property, View, zeroLength } from '@nativescript/core';
 
 // init text to ensure font overrides are called
 init();
@@ -41,10 +41,10 @@ export function xfermodeFromString(str) {
 
 export abstract class SVG extends Shape {
     _parent: WeakRef<any>;
-    @percentLengthProperty width: PercentLength;
-    @percentLengthProperty height: PercentLength;
-    @lengthProperty left: Length = zeroLength;
-    @lengthProperty top: Length = zeroLength;
+    @percentLengthProperty width: CoreTypes.PercentLengthType;
+    @percentLengthProperty height: CoreTypes.PercentLengthType;
+    @lengthProperty left: CoreTypes.LengthType = zeroLength;
+    @lengthProperty top: CoreTypes.LengthType = zeroLength;
     blendingMode: PorterDuffMode;
     cache: boolean = true;
     drawOnCanvas(canvas: Canvas, parent: CanvasView) {}
@@ -55,7 +55,7 @@ export abstract class SVG extends Shape {
 }
 
 declare module '@nativescript/core/ui/core/view' {
-    interface View {
+    interface ViewCommon {
         _addChildFromBuilder(name: string, value: any);
     }
 }
@@ -75,40 +75,34 @@ export class CanvasSVG extends CanvasView {
     // constructor() {
     //     super();
     // }
-
     //@ts-ignore
     // set color(value) {
     //     this.style.color = value;
     // }
-
     // get padding(): string | Length {
     //     return this.style.padding;
     // }
     // set padding(value: string | Length) {
     //     this.style.padding = value;
     // }
-
     // get paddingTop(): Length {
     //     return this.style.paddingTop;
     // }
     // set paddingTop(value: Length) {
     //     this.style.paddingTop = value;
     // }
-
     // get paddingRight(): Length {
     //     return this.style.paddingRight;
     // }
     // set paddingRight(value: Length) {
     //     this.style.paddingRight = value;
     // }
-
     // get paddingBottom(): Length {
     //     return this.style.paddingBottom;
     // }
     // set paddingBottom(value: Length) {
     //     this.style.paddingBottom = value;
     // }
-
     // get paddingLeft(): Length {
     //     return this.style.paddingLeft;
     // }

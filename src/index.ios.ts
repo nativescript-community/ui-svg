@@ -1,6 +1,5 @@
 import { Canvas, CanvasView, Paint, PorterDuffXfermode } from '@nativescript-community/ui-canvas';
 import { File, ImageAsset, Screen, Utils, knownFolders, path } from '@nativescript/core';
-import { RESOURCE_PREFIX, isFileOrResourcePath } from '@nativescript/core/utils/utils';
 import { SVG as SVGBase, SVGView as SVGViewBase, srcProperty, stretchProperty, xfermodeFromString } from './index.common';
 export { CanvasSVG } from './index.common';
 
@@ -30,9 +29,9 @@ function getRenderer(src: string | ImageAsset | File) {
     } else {
         imagePath = src;
     }
-    if (isFileOrResourcePath(imagePath)) {
-        if (imagePath.indexOf(RESOURCE_PREFIX) === 0) {
-            const resName = imagePath.substr(RESOURCE_PREFIX.length);
+    if (Utils.isFileOrResourcePath(imagePath)) {
+        if (imagePath.indexOf(Utils.RESOURCE_PREFIX) === 0) {
+            const resName = imagePath.substr(Utils.RESOURCE_PREFIX.length);
             return SVGRenderer.alloc().initWithResourceNameInBundle(resName, NSBundle.mainBundle);
         } else if (imagePath.indexOf('~/') === 0) {
             const strPath = path.join(knownFolders.currentApp().path, imagePath.replace('~/', ''));
@@ -54,9 +53,9 @@ function getSVGKImage(src: string | ImageAsset | File) {
     } else {
         imagePath = src;
     }
-    if (isFileOrResourcePath(imagePath)) {
-        if (imagePath.indexOf(RESOURCE_PREFIX) === 0) {
-            const resName = imagePath.substr(RESOURCE_PREFIX.length);
+    if (Utils.isFileOrResourcePath(imagePath)) {
+        if (imagePath.indexOf(Utils.RESOURCE_PREFIX) === 0) {
+            const resName = imagePath.substr(Utils.RESOURCE_PREFIX.length);
             return SVGKImage.imageNamed(resName);
         } else if (imagePath.indexOf('~/') === 0) {
             const strPath = path.join(knownFolders.currentApp().path, imagePath.replace('~/', ''));
