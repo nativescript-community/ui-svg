@@ -1,3 +1,6 @@
+>**Warning**
+This repo is no archived as @nativescript-community/ui-svg is now maintained inside [ui-canvas monorepo](https://github.com/nativescript-community/ui-canvas)
+
 # NativeScript SVG widget
 
 [![npm downloads](https://img.shields.io/npm/dm/@nativescript-community/ui-svg.svg)](https://www.npmjs.com/package/@nativescript-community/ui-svg)
